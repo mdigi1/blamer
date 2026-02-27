@@ -7,9 +7,10 @@ A lightweight, no-build web app that picks a random winner from a list using a s
 - Lets you add and remove participant names.
 - Renders a colorful wheel on `<canvas>` with one segment per name.
 - Spins with easing animation and selects a random winner.
-- Shows humorous dev phrases under the wheel while it is spinning.
+- Shows rotating dev phrases under the wheel while it is spinning.
 - Highlights the winner in the list and result area.
 - Shows celebration effects (confetti + fullscreen winner overlay).
+- Runs a continuous falling “bug rain” effect with common error messages and bug icons.
 - Displays the current date and refreshes it every minute.
 
 ## Tech Stack
@@ -46,20 +47,24 @@ Then open `http://localhost:8080`.
 
 ## Project Structure
 
-- `index.html`: app layout and UI elements
-- `style.css`: theme, layout, responsive styles, and animations
-- `script.js`: state management, wheel drawing, spin logic, and interactions
+- `index.html`: app layout and accessible UI anchors
+- `style.css`: theme, layout, responsive styles, and animation system
+- `script.js`: app logic (`dom/config/state/helpers` organization)
+- `bug-icon*.svg`: falling bug icon assets
+- `favicon.svg`: tab icon
 
 ## Customization
 
 Edit `script.js` to tune behavior:
 
-- Default names: `let names = [...]`
-- Wheel palette: `const sliceColors = [...]`
-- Spin duration: `const duration = 7000` (milliseconds)
-- Confetti amount: loop count in `showWinnerBurst()`
-- Spin phrases: `const spinPhrases = [...]`
-- Phrase timing: `spinPhraseIntervalMs` and `spinPhraseSwapPointMs`
+- Default names: `state.names = [...]`
+- Wheel palette: `SLICE_COLORS`
+- Spin timing: `CONFIG.timing.spinDurationMs`
+- Winner fullscreen duration: `CONFIG.timing.winnerBlastMs`
+- Confetti intensity: `CONFIG.confetti.count`
+- Spin phrases: `SPIN_PHRASES`
+- Bug rain speed/intensity: `CONFIG.timing.bugRainIntervalMs`, `CONFIG.bugRain.dropsPerTick`
+- Bug rain messages/icons: `CONFIG.bugRain.texts`, `CONFIG.bugRain.icons`
 
 ## Current Notes
 

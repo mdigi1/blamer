@@ -1,28 +1,139 @@
-const nameInput = document.getElementById('nameInput');
-const addBtn = document.getElementById('addBtn');
-const spinBtn = document.getElementById('spinBtn');
-const resultEl = document.getElementById('result');
-const namesListEl = document.getElementById('namesList');
-const currentDateEl = document.getElementById('currentDate');
-const wheelWrap = document.getElementById('wheelWrap');
-const fxLayer = document.getElementById('fxLayer');
-let spinPhraseEl = document.getElementById('spinPhrase');
-const winnerBlastEl = document.getElementById('winnerBlast');
-const winnerBlastNameEl = document.getElementById('winnerBlastName');
+const dom = {
+  nameInput: document.getElementById('nameInput'),
+  addBtn: document.getElementById('addBtn'),
+  spinBtn: document.getElementById('spinBtn'),
+  resultEl: document.getElementById('result'),
+  namesListEl: document.getElementById('namesList'),
+  currentDateEl: document.getElementById('currentDate'),
+  wheelWrap: document.getElementById('wheelWrap'),
+  fxLayer: document.getElementById('fxLayer'),
+  spinPhraseEl: document.getElementById('spinPhrase'),
+  winnerBlastEl: document.getElementById('winnerBlast'),
+  winnerBlastNameEl: document.getElementById('winnerBlastName'),
+  canvas: document.getElementById('wheel')
+};
 
-const canvas = document.getElementById('wheel');
-const ctx = canvas.getContext('2d');
-const center = canvas.width / 2;
-const radius = center - 12;
+const wheelCtx = dom.canvas?.getContext('2d');
 
-const sliceColors = [
-  '#f95d6a', '#ff9f1c', '#ffd166', '#06d6a0',
-  '#00a8e8', '#4361ee', '#9d4edd', '#ef476f'
+const CONFIG = {
+  geometry: {
+    fullCircle: Math.PI * 2,
+    pointerAngle: -Math.PI / 2,
+    centerRadius: 32
+  },
+  timing: {
+    winnerBlastMs: 4200,
+    spinPhraseIntervalMs: 2200,
+    spinPhraseSwapPointMs: 360,
+    spinPhraseHideDelayMs: 700,
+    spinDurationMs: 7000,
+    celebrateDurationMs: 800,
+    screenShakeMs: 2200,
+    dateRefreshMs: 60000,
+    bugRainIntervalMs: 1800,
+    bugPopDurationMs: 320,
+    bugPopBurstMs: 560,
+    bugDropMinDurationMs: 8200,
+    bugDropMaxDurationMs: 12000
+  },
+  spin: {
+    minSpins: 6,
+    extraSpinVariants: 3
+  },
+  bugRain: {
+    dropsPerTick: 1,
+    warmupCount: 2,
+    iconChance: 0.3,
+    colors: ['#ff6b35', '#ffd166', '#06d6a0', '#5ac8ff', '#ef476f', '#ff9f1c'],
+    icons: [
+      'bug-icon.svg?v=20260227a',
+      'bug-icon-2.svg?v=20260227a',
+      'bug-icon-3.svg?v=20260227a',
+      'bug-icon-4.svg?v=20260227a'
+    ],
+    texts: [
+      'NaN',
+      "can't read property of undefined",
+      'Cannot read properties of undefined',
+      'undefined is not a function',
+      'TypeError: x is not a function',
+      'ReferenceError: x is not defined',
+      'SyntaxError: Unexpected token',
+      'Maximum call stack size exceeded',
+      'RangeError: Invalid array length',
+      'Cannot set headers after they are sent',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      '429 Too Many Requests',
+      '500 Internal Server Error',
+      'CORS policy blocked the request',
+      'NetworkError when attempting to fetch resource',
+      'Module not found',
+      '404 Not Found',
+      'EADDRINUSE: address already in use',
+      'ENOMEM: out of memory',
+      'EACCES: permission denied',
+      '401 Unauthorized',
+      '403 Forbidden',
+      '502 Bad Gateway',
+      '503 Service Unavailable',
+      '504 Gateway Timeout',
+      'Uncaught (in promise)',
+      'Promise rejected with no catch',
+      'AbortError: The operation was aborted',
+      'Failed to fetch',
+      'ERR_CONNECTION_RESET',
+      'ERR_NAME_NOT_RESOLVED',
+      'ERR_SSL_PROTOCOL_ERROR',
+      'TypeError: Cannot convert undefined or null to object',
+      'TypeError: Assignment to constant variable',
+      'ReferenceError: process is not defined',
+      'Unexpected end of JSON input',
+      'JSON.parse: bad parsing',
+      'Invalid hook call',
+      'Hydration failed',
+      'ChunkLoadError',
+      'Cannot find module',
+      'npm ERR! peer dep missing',
+      'npm ERR! ERESOLVE unable to resolve dependency tree',
+      'pnpm ERR_PNPM_FETCH_404',
+      'yarn install v1.22 failed',
+      'Killed: JavaScript heap out of memory',
+      'PrismaClientInitializationError',
+      'SequelizeConnectionRefusedError',
+      'Duplicate key value violates unique constraint',
+      'SQLITE_BUSY: database is locked',
+      'Deadlock found when trying to get lock',
+      'connection pool exhausted',
+      'Build failed with 1 error',
+      'Process exited with code 1',
+      'Segmentation fault (core dumped)',
+      'fatal: not a git repository',
+      'fatal: refusing to merge unrelated histories'
+    ]
+  }
+};
+
+const SLICE_COLORS = [
+  '#f95d6a',
+  '#ff9f1c',
+  '#ffd166',
+  '#06d6a0',
+  '#00a8e8',
+  '#4361ee',
+  '#9d4edd',
+  '#ef476f'
 ];
-const spinPhraseIntervalMs = 2200;
-const spinPhraseSwapPointMs = 360;
 
-const spinPhrases = [
+const UI_TEXT = {
+  winnerPrefix: 'Winner for today: ',
+  winnerEmpty: 'Winner for today: —',
+  listEmpty: 'List is empty',
+  spinning: 'Spinning...',
+  noNames: 'No names'
+};
+
+const SPIN_PHRASES = [
   'Who broke prod this time?',
   'Works on my machine, ship it.',
   'No plan, full deploy, zero fear.',
@@ -74,72 +185,178 @@ const spinPhrases = [
   'Same bug, different microservice.'
 ];
 
-let names = ['Evgeniy P', 'Hlib', 'Ihor', 'Iryn', 'Ivan (singer)', 'Ivan', 'Max', 'Niv', 'Oleg', 'Roma', 'Ross', 'Ruslan', 'Serhii (greatest)', 'Serhii', 'Vitalii', 'Yaroslav', 'Yevhenii H', 'Jonathan'];
-let rotation = 0;
-let isSpinning = false;
-let lastWinnerIndex = null;
-let winnerBlastTimer = null;
-let spinPhraseInterval = null;
-let spinPhraseHideTimer = null;
+const state = {
+  names: [
+    'Evgeniy P',
+    'Hlib',
+    'Ihor',
+    'Iryn',
+    'Ivan (singer)',
+    'Ivan',
+    'Max',
+    'Niv',
+    'Oleg',
+    'Roma',
+    'Ross',
+    'Ruslan',
+    'Serhii (greatest)',
+    'Serhii',
+    'Vitalii',
+    'Yaroslav',
+    'Yevhenii H',
+    'Jonathan'
+  ],
+  rotation: 0,
+  isSpinning: false,
+  lastWinnerIndex: null,
+  timers: {
+    winnerBlast: null,
+    spinPhraseInterval: null,
+    spinPhraseSwap: null,
+    spinPhraseHide: null,
+    bugRainInterval: null,
+    screenShake: null,
+    dateRefresh: null
+  }
+};
 
-function renderCurrentDate() {
-  if (!currentDateEl) {
+function randomInt(maxExclusive) {
+  return Math.floor(Math.random() * maxExclusive);
+}
+
+function randomRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function normalizeRotation(value) {
+  let normalized = value % CONFIG.geometry.fullCircle;
+  if (normalized < 0) {
+    normalized += CONFIG.geometry.fullCircle;
+  }
+  return normalized;
+}
+
+function clearTimer(timerKey, clearFn) {
+  if (!state.timers[timerKey]) {
     return;
   }
 
-  const now = new Date();
-  const dateText = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(now);
-  currentDateEl.textContent = `Today: ${dateText}`;
+  clearFn(state.timers[timerKey]);
+  state.timers[timerKey] = null;
+}
+
+function scheduleTimeout(timerKey, callback, delay) {
+  clearTimer(timerKey, clearTimeout);
+  state.timers[timerKey] = setTimeout(() => {
+    state.timers[timerKey] = null;
+    callback();
+  }, delay);
+}
+
+function scheduleInterval(timerKey, callback, interval) {
+  clearTimer(timerKey, clearInterval);
+  state.timers[timerKey] = setInterval(callback, interval);
+}
+
+function removeLater(node, delay) {
+  if (!node) {
+    return;
+  }
+
+  setTimeout(() => node.remove(), delay);
+}
+
+function setSpinningState(spinning) {
+  state.isSpinning = spinning;
+  if (dom.spinBtn) {
+    dom.spinBtn.disabled = spinning;
+  }
+  dom.wheelWrap?.classList.toggle('is-spinning', spinning);
 }
 
 function normalizeName(raw) {
   return raw.trim().replace(/\s+/g, ' ');
 }
 
+function renderCurrentDate() {
+  if (!dom.currentDateEl) {
+    return;
+  }
+
+  const dateText = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+
+  dom.currentDateEl.textContent = `Today: ${dateText}`;
+}
+
 function resetResult() {
-  resultEl.textContent = 'Winner for today: —';
-  resultEl.classList.remove('win');
+  if (!dom.resultEl) {
+    return;
+  }
+
+  dom.resultEl.textContent = UI_TEXT.winnerEmpty;
+  dom.resultEl.classList.remove('win');
 }
 
 function showWinnerResult(name) {
-  resultEl.textContent = '';
-  resultEl.append(document.createTextNode('Winner for today: '));
+  if (!dom.resultEl) {
+    return;
+  }
+
+  dom.resultEl.textContent = '';
+  dom.resultEl.append(document.createTextNode(UI_TEXT.winnerPrefix));
 
   const winnerName = document.createElement('span');
   winnerName.className = 'winner-name';
   winnerName.textContent = name;
-  resultEl.append(winnerName);
+  dom.resultEl.append(winnerName);
 }
 
 function showWinnerFullscreen(name) {
-  if (!winnerBlastEl || !winnerBlastNameEl) {
+  if (!dom.winnerBlastEl || !dom.winnerBlastNameEl) {
     return;
   }
 
-  winnerBlastNameEl.textContent = name;
-  winnerBlastEl.classList.remove('show');
-  void winnerBlastEl.offsetWidth;
-  winnerBlastEl.classList.add('show');
+  dom.winnerBlastNameEl.textContent = name;
+  dom.winnerBlastEl.classList.remove('show');
+  void dom.winnerBlastEl.offsetWidth;
+  dom.winnerBlastEl.classList.add('show');
 
-  if (winnerBlastTimer) {
-    clearTimeout(winnerBlastTimer);
-  }
-
-  winnerBlastTimer = setTimeout(() => {
-    winnerBlastEl.classList.remove('show');
-  }, 2200);
+  scheduleTimeout('winnerBlast', () => {
+    dom.winnerBlastEl?.classList.remove('show');
+  }, CONFIG.timing.winnerBlastMs);
 }
 
-function ensureSpinPhraseElement() {
-  if (spinPhraseEl) {
-    return spinPhraseEl;
+function triggerScreenShake() {
+  const page = document.body;
+  const root = document.documentElement;
+  if (!page || !root) {
+    return;
   }
-  if (!wheelWrap) {
+
+  clearTimer('screenShake', clearTimeout);
+  root.classList.remove('screen-shake');
+  page.classList.remove('screen-shake');
+  void page.offsetWidth;
+  root.classList.add('screen-shake');
+  page.classList.add('screen-shake');
+
+  scheduleTimeout('screenShake', () => {
+    root.classList.remove('screen-shake');
+    page.classList.remove('screen-shake');
+  }, CONFIG.timing.screenShakeMs);
+}
+
+function getSpinPhraseElement(createIfMissing = false) {
+  if (dom.spinPhraseEl || !createIfMissing) {
+    return dom.spinPhraseEl;
+  }
+
+  if (!dom.wheelWrap) {
     return null;
   }
 
@@ -147,41 +364,37 @@ function ensureSpinPhraseElement() {
   created.id = 'spinPhrase';
   created.className = 'spin-phrase';
   created.setAttribute('aria-live', 'polite');
-  wheelWrap.appendChild(created);
-  spinPhraseEl = created;
-  return spinPhraseEl;
+  dom.wheelWrap.appendChild(created);
+  dom.spinPhraseEl = created;
+  return dom.spinPhraseEl;
 }
 
 function pickSpinPhrase(previous = '') {
-  if (spinPhrases.length <= 1) {
-    return spinPhrases[0] || '';
+  if (SPIN_PHRASES.length <= 1) {
+    return SPIN_PHRASES[0] || '';
   }
 
   let next = previous;
   for (let i = 0; i < 5 && next === previous; i += 1) {
-    next = spinPhrases[Math.floor(Math.random() * spinPhrases.length)];
+    next = SPIN_PHRASES[randomInt(SPIN_PHRASES.length)];
   }
   return next;
 }
 
 function renderSpinPhrase() {
-  const phraseEl = ensureSpinPhraseElement();
+  const phraseEl = getSpinPhraseElement(true);
   if (!phraseEl) {
     return;
   }
 
-  if (spinPhraseHideTimer) {
-    clearTimeout(spinPhraseHideTimer);
-    spinPhraseHideTimer = null;
-  }
-
+  clearTimer('spinPhraseHide', clearTimeout);
   phraseEl.textContent = pickSpinPhrase(phraseEl.textContent);
   phraseEl.classList.remove('swap');
   phraseEl.classList.add('show');
 }
 
 function animateSpinPhraseSwap() {
-  const phraseEl = ensureSpinPhraseElement();
+  const phraseEl = getSpinPhraseElement(true);
   if (!phraseEl) {
     return;
   }
@@ -191,67 +404,186 @@ function animateSpinPhraseSwap() {
   void phraseEl.offsetWidth;
   phraseEl.classList.add('swap');
 
-  setTimeout(() => {
-    if (!phraseEl || !isSpinning) {
+  scheduleTimeout('spinPhraseSwap', () => {
+    if (!state.isSpinning) {
       return;
     }
     phraseEl.textContent = nextPhrase;
-  }, spinPhraseSwapPointMs);
+  }, CONFIG.timing.spinPhraseSwapPointMs);
 }
 
 function startSpinPhrases() {
-  if (spinPhraseInterval) {
-    clearInterval(spinPhraseInterval);
-  }
-  if (spinPhraseHideTimer) {
-    clearTimeout(spinPhraseHideTimer);
-    spinPhraseHideTimer = null;
-  }
-
+  clearTimer('spinPhraseSwap', clearTimeout);
+  clearTimer('spinPhraseHide', clearTimeout);
   renderSpinPhrase();
-  spinPhraseInterval = setInterval(animateSpinPhraseSwap, spinPhraseIntervalMs);
+
+  scheduleInterval('spinPhraseInterval', animateSpinPhraseSwap, CONFIG.timing.spinPhraseIntervalMs);
 }
 
 function stopSpinPhrases() {
-  if (spinPhraseInterval) {
-    clearInterval(spinPhraseInterval);
-    spinPhraseInterval = null;
-  }
-  const phraseEl = ensureSpinPhraseElement();
+  clearTimer('spinPhraseInterval', clearInterval);
+  clearTimer('spinPhraseSwap', clearTimeout);
+
+  const phraseEl = getSpinPhraseElement();
   if (!phraseEl) {
     return;
   }
 
   phraseEl.classList.remove('swap');
-  if (spinPhraseHideTimer) {
-    clearTimeout(spinPhraseHideTimer);
-  }
-  spinPhraseHideTimer = setTimeout(() => {
-    if (!phraseEl) {
-      return;
-    }
-
+  scheduleTimeout('spinPhraseHide', () => {
     phraseEl.classList.remove('show');
     phraseEl.textContent = '';
-    spinPhraseHideTimer = null;
-  }, 700);
+  }, CONFIG.timing.spinPhraseHideDelayMs);
 }
 
-function renderNameChips() {
-  namesListEl.innerHTML = '';
-
-  if (!names.length) {
-    const empty = document.createElement('span');
-    empty.className = 'name-chip';
-    empty.textContent = 'List is empty';
-    namesListEl.appendChild(empty);
+function emitBugDrop() {
+  if (!dom.fxLayer) {
     return;
   }
 
-  names.forEach((name, index) => {
+  const useIcon = Math.random() < CONFIG.bugRain.iconChance;
+  const drop = useIcon ? document.createElement('img') : document.createElement('span');
+  drop.className = useIcon ? 'bug-drop bug-drop--icon' : 'bug-drop';
+
+  if (useIcon) {
+    drop.src = CONFIG.bugRain.icons[randomInt(CONFIG.bugRain.icons.length)];
+    drop.alt = 'Bug';
+    drop.style.width = `${randomRange(48, 76)}px`;
+    drop.style.height = 'auto';
+    drop.style.setProperty('--bug-hit-x', '14px');
+    drop.style.setProperty('--bug-hit-y', '14px');
+    drop.style.setProperty('--bug-hit-x-neg', '-14px');
+    drop.style.setProperty('--bug-hit-y-neg', '-14px');
+  } else {
+    drop.textContent = CONFIG.bugRain.texts[randomInt(CONFIG.bugRain.texts.length)];
+    drop.style.color = CONFIG.bugRain.colors[randomInt(CONFIG.bugRain.colors.length)];
+    drop.style.fontSize = `${randomRange(1, 1.7)}rem`;
+    drop.style.setProperty('--bug-hit-x', '12px');
+    drop.style.setProperty('--bug-hit-y', '9px');
+    drop.style.setProperty('--bug-hit-x-neg', '-12px');
+    drop.style.setProperty('--bug-hit-y-neg', '-9px');
+  }
+
+  drop.style.left = `${randomRange(0, window.innerWidth)}px`;
+  drop.style.top = '-48px';
+  drop.style.setProperty('--bug-drift-x', `${randomRange(-90, 90)}px`);
+  drop.style.setProperty('--bug-rot-end', `${randomRange(-36, 36)}deg`);
+
+  const duration = randomRange(CONFIG.timing.bugDropMinDurationMs, CONFIG.timing.bugDropMaxDurationMs);
+  const delay = randomRange(0, 220);
+  drop.style.setProperty('--bug-fall-duration', `${duration}ms`);
+  drop.style.animationDelay = `${delay}ms`;
+  drop.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    popBugDrop(drop);
+  });
+
+  dom.fxLayer.appendChild(drop);
+  removeLater(drop, duration + delay + 180);
+}
+
+function popBugDrop(drop) {
+  if (!drop || drop.dataset.popping === '1') {
+    return;
+  }
+
+  drop.dataset.popping = '1';
+  const computed = getComputedStyle(drop);
+  const rect = drop.getBoundingClientRect();
+  const burstX = rect.left + rect.width / 2;
+  const burstY = rect.top + rect.height / 2;
+  const burstColor = computed.color && computed.color !== 'rgba(0, 0, 0, 0)' ? computed.color : '#ffd166';
+  const baseTransform = computed.transform === 'none' ? 'translate(0, 0)' : computed.transform;
+  const baseOpacity = Math.max(Number.parseFloat(computed.opacity) || 1, 0.85);
+
+  drop.style.animation = 'none';
+  drop.style.transform = baseTransform;
+  drop.style.opacity = String(baseOpacity);
+  drop.style.pointerEvents = 'none';
+
+  spawnBugPopBurst(burstX, burstY, burstColor);
+
+  const popAnimation = drop.animate(
+    [
+      { transform: `${baseTransform} scale(1) rotate(0deg)`, opacity: baseOpacity, filter: 'none' },
+      { transform: `${baseTransform} scale(1.95) rotate(10deg)`, opacity: 0, filter: 'blur(1.8px)' }
+    ],
+    {
+      duration: CONFIG.timing.bugPopDurationMs,
+      easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+      fill: 'forwards'
+    }
+  );
+
+  popAnimation.onfinish = () => drop.remove();
+}
+
+function spawnBugPopBurst(x, y, color) {
+  if (!dom.fxLayer) {
+    return;
+  }
+
+  const burst = document.createElement('span');
+  burst.className = 'bug-pop-burst';
+  burst.style.left = `${x}px`;
+  burst.style.top = `${y}px`;
+  burst.style.setProperty('--burst-color', color);
+  dom.fxLayer.appendChild(burst);
+  removeLater(burst, CONFIG.timing.bugPopBurstMs);
+
+  for (let i = 0; i < 7; i += 1) {
+    const shard = document.createElement('span');
+    shard.className = 'bug-pop-shard';
+    shard.style.left = `${x}px`;
+    shard.style.top = `${y}px`;
+    shard.style.setProperty('--burst-color', color);
+    shard.style.setProperty('--sx', `${randomRange(-48, 48)}px`);
+    shard.style.setProperty('--sy', `${randomRange(-48, 48)}px`);
+    shard.style.setProperty('--srot', `${randomRange(-130, 130)}deg`);
+    shard.style.animationDelay = `${randomRange(0, 80)}ms`;
+    dom.fxLayer.appendChild(shard);
+    removeLater(shard, CONFIG.timing.bugPopBurstMs + 120);
+  }
+}
+
+function startBugRain() {
+  if (!dom.fxLayer) {
+    return;
+  }
+
+  clearTimer('bugRainInterval', clearInterval);
+
+  for (let i = 0; i < CONFIG.bugRain.warmupCount; i += 1) {
+    setTimeout(emitBugDrop, randomRange(0, 260));
+  }
+
+  scheduleInterval('bugRainInterval', () => {
+    for (let i = 0; i < CONFIG.bugRain.dropsPerTick; i += 1) {
+      emitBugDrop();
+    }
+  }, CONFIG.timing.bugRainIntervalMs);
+}
+
+function renderNameChips() {
+  if (!dom.namesListEl) {
+    return;
+  }
+
+  dom.namesListEl.innerHTML = '';
+
+  if (!state.names.length) {
+    const empty = document.createElement('span');
+    empty.className = 'name-chip';
+    empty.textContent = UI_TEXT.listEmpty;
+    dom.namesListEl.appendChild(empty);
+    return;
+  }
+
+  state.names.forEach((name, index) => {
     const chip = document.createElement('span');
     chip.className = 'name-chip';
-    if (index === lastWinnerIndex) {
+    if (index === state.lastWinnerIndex) {
       chip.classList.add('winner-chip');
     }
     chip.textContent = name;
@@ -261,133 +593,135 @@ function renderNameChips() {
     removeBtn.className = 'chip-remove';
     removeBtn.textContent = '×';
     removeBtn.setAttribute('aria-label', `Remove ${name}`);
-    removeBtn.addEventListener('click', () => {
-      removeName(index);
-    });
+    removeBtn.addEventListener('click', () => removeName(index));
 
     chip.appendChild(removeBtn);
-    namesListEl.appendChild(chip);
+    dom.namesListEl.appendChild(chip);
   });
 }
 
 function drawWheel() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (!names.length) {
-    ctx.beginPath();
-    ctx.arc(center, center, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#f4f4f4';
-    ctx.fill();
-
-    ctx.fillStyle = '#666';
-    ctx.font = '700 24px "Trebuchet MS", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('No names', center, center);
+  if (!dom.canvas || !wheelCtx) {
     return;
   }
 
-  const n = names.length;
-  const segment = (Math.PI * 2) / n;
+  const center = dom.canvas.width / 2;
+  const radius = center - 12;
 
-  for (let i = 0; i < n; i += 1) {
-    const start = rotation + i * segment;
-    const end = start + segment;
+  wheelCtx.clearRect(0, 0, dom.canvas.width, dom.canvas.height);
 
-    ctx.beginPath();
-    ctx.moveTo(center, center);
-    ctx.arc(center, center, radius, start, end);
-    ctx.closePath();
-    ctx.fillStyle = sliceColors[i % sliceColors.length];
-    ctx.fill();
+  if (!state.names.length) {
+    wheelCtx.beginPath();
+    wheelCtx.arc(center, center, radius, 0, CONFIG.geometry.fullCircle);
+    wheelCtx.fillStyle = '#f4f4f4';
+    wheelCtx.fill();
 
-    ctx.save();
-    ctx.translate(center, center);
-    ctx.rotate(start + segment / 2);
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#fff';
-    ctx.font = '700 24px "Trebuchet MS", sans-serif';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-    ctx.shadowBlur = 2;
-    ctx.fillText(names[i], radius - 24, 0);
-    ctx.restore();
+    wheelCtx.fillStyle = '#666';
+    wheelCtx.font = '700 24px "Trebuchet MS", sans-serif';
+    wheelCtx.textAlign = 'center';
+    wheelCtx.textBaseline = 'middle';
+    wheelCtx.fillText(UI_TEXT.noNames, center, center);
+    return;
   }
 
-  ctx.beginPath();
-  ctx.arc(center, center, 32, 0, Math.PI * 2);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = '#222';
-  ctx.stroke();
+  const segment = CONFIG.geometry.fullCircle / state.names.length;
+
+  for (let i = 0; i < state.names.length; i += 1) {
+    const start = state.rotation + i * segment;
+    const end = start + segment;
+
+    wheelCtx.beginPath();
+    wheelCtx.moveTo(center, center);
+    wheelCtx.arc(center, center, radius, start, end);
+    wheelCtx.closePath();
+    wheelCtx.fillStyle = SLICE_COLORS[i % SLICE_COLORS.length];
+    wheelCtx.fill();
+
+    wheelCtx.save();
+    wheelCtx.translate(center, center);
+    wheelCtx.rotate(start + segment / 2);
+    wheelCtx.textAlign = 'right';
+    wheelCtx.textBaseline = 'middle';
+    wheelCtx.fillStyle = '#fff';
+    wheelCtx.font = '700 24px "Trebuchet MS", sans-serif';
+    wheelCtx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    wheelCtx.shadowBlur = 2;
+    wheelCtx.fillText(state.names[i], radius - 24, 0);
+    wheelCtx.restore();
+  }
+
+  wheelCtx.beginPath();
+  wheelCtx.arc(center, center, CONFIG.geometry.centerRadius, 0, CONFIG.geometry.fullCircle);
+  wheelCtx.fillStyle = '#fff';
+  wheelCtx.fill();
+  wheelCtx.lineWidth = 4;
+  wheelCtx.strokeStyle = '#222';
+  wheelCtx.stroke();
+}
+
+function syncAfterNamesChange() {
+  state.lastWinnerIndex = null;
+  resetResult();
+  renderNameChips();
+  drawWheel();
 }
 
 function addName() {
-  if (isSpinning) {
+  if (state.isSpinning || !dom.nameInput) {
     return;
   }
 
-  const value = normalizeName(nameInput.value);
+  const value = normalizeName(dom.nameInput.value);
   if (!value) {
     return;
   }
 
-  names.push(value);
-  nameInput.value = '';
-  lastWinnerIndex = null;
-  resetResult();
-  renderNameChips();
-  drawWheel();
+  state.names.push(value);
+  dom.nameInput.value = '';
+  syncAfterNamesChange();
 }
 
 function removeName(index) {
-  if (isSpinning) {
+  if (state.isSpinning) {
     return;
   }
 
-  if (index < 0 || index >= names.length) {
+  if (index < 0 || index >= state.names.length) {
     return;
   }
 
-  names.splice(index, 1);
-  lastWinnerIndex = null;
-  resetResult();
-  renderNameChips();
-  drawWheel();
+  state.names.splice(index, 1);
+  syncAfterNamesChange();
 }
 
 function spinWheel() {
-  if (isSpinning || names.length === 0) {
+  if (state.isSpinning || state.names.length === 0) {
     return;
   }
 
-  isSpinning = true;
-  spinBtn.disabled = true;
-  wheelWrap.classList.add('is-spinning');
-  resultEl.classList.remove('win');
-  resultEl.textContent = 'Spinning...';
+  setSpinningState(true);
+  if (dom.resultEl) {
+    dom.resultEl.classList.remove('win');
+    dom.resultEl.textContent = UI_TEXT.spinning;
+  }
   startSpinPhrases();
 
-  const n = names.length;
-  const segment = (Math.PI * 2) / n;
-  const winnerIndex = Math.floor(Math.random() * n);
+  const segment = CONFIG.geometry.fullCircle / state.names.length;
+  const winnerIndex = randomInt(state.names.length);
 
-  const pointerAngle = -Math.PI / 2;
   const winnerCenterAtZero = winnerIndex * segment + segment / 2;
-  const baseTarget = pointerAngle - winnerCenterAtZero;
-  const spins = 6 + Math.floor(Math.random() * 3);
-  const targetRotation = baseTarget + spins * Math.PI * 2;
+  const baseTarget = CONFIG.geometry.pointerAngle - winnerCenterAtZero;
+  const spins = CONFIG.spin.minSpins + randomInt(CONFIG.spin.extraSpinVariants);
+  const targetRotation = baseTarget + spins * CONFIG.geometry.fullCircle;
 
   const start = performance.now();
-  const startRotation = rotation;
-  const duration = 7000;
+  const startRotation = state.rotation;
 
   function animate(now) {
-    const progress = Math.min((now - start) / duration, 1);
+    const progress = Math.min((now - start) / CONFIG.timing.spinDurationMs, 1);
     const eased = 1 - Math.pow(1 - progress, 3);
 
-    rotation = startRotation + (targetRotation - startRotation) * eased;
+    state.rotation = startRotation + (targetRotation - startRotation) * eased;
     drawWheel();
 
     if (progress < 1) {
@@ -395,70 +729,52 @@ function spinWheel() {
       return;
     }
 
-    const full = Math.PI * 2;
-    rotation %= full;
-    if (rotation < 0) {
-      rotation += full;
-    }
-
-    isSpinning = false;
+    state.rotation = normalizeRotation(state.rotation);
+    setSpinningState(false);
     stopSpinPhrases();
-    spinBtn.disabled = false;
-    wheelWrap.classList.remove('is-spinning');
-    wheelWrap.classList.add('celebrate');
-    lastWinnerIndex = winnerIndex;
+
+    dom.wheelWrap?.classList.add('celebrate');
+    state.lastWinnerIndex = winnerIndex;
     renderNameChips();
-    showWinnerResult(names[winnerIndex]);
-    resultEl.classList.add('win');
-    showWinnerBurst();
-    showWinnerFullscreen(names[winnerIndex]);
-    setTimeout(() => wheelWrap.classList.remove('celebrate'), 800);
+    showWinnerResult(state.names[winnerIndex]);
+    dom.resultEl?.classList.add('win');
+    showWinnerFullscreen(state.names[winnerIndex]);
+    triggerScreenShake();
+
+    setTimeout(() => {
+      dom.wheelWrap?.classList.remove('celebrate');
+    }, CONFIG.timing.celebrateDurationMs);
   }
 
   requestAnimationFrame(animate);
 }
 
-function showWinnerBurst() {
-  if (!fxLayer) {
-    return;
-  }
+function bindEvents() {
+  dom.addBtn?.addEventListener('click', addName);
+  dom.spinBtn?.addEventListener('click', spinWheel);
+  dom.canvas?.addEventListener('click', spinWheel);
 
-  const colors = ['#ff6b35', '#06d6a0', '#ffd166', '#00a8e8', '#ef476f', '#4361ee'];
-  const originX = window.innerWidth * 0.5;
-  const originY = window.innerHeight * 0.16;
+  dom.nameInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      addName();
+    }
+  });
 
-  for (let i = 0; i < 36; i += 1) {
-    const piece = document.createElement('span');
-    piece.className = 'confetti-piece';
-    piece.style.left = `${originX}px`;
-    piece.style.top = `${originY}px`;
-    piece.style.background = colors[i % colors.length];
-    piece.style.setProperty('--dx', `${-220 + Math.random() * 440}px`);
-    piece.style.setProperty('--dy', `${120 + Math.random() * 220}px`);
-    piece.style.setProperty('--rot', `${-300 + Math.random() * 600}deg`);
-    piece.style.animationDelay = `${Math.random() * 120}ms`;
-
-    fxLayer.appendChild(piece);
-    setTimeout(() => piece.remove(), 1300);
-  }
+  document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space' && document.activeElement !== dom.nameInput) {
+      event.preventDefault();
+      spinWheel();
+    }
+  });
 }
 
-addBtn.addEventListener('click', addName);
-nameInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    addName();
-  }
-});
-spinBtn.addEventListener('click', spinWheel);
-canvas.addEventListener('click', spinWheel);
-document.addEventListener('keydown', (event) => {
-  if (event.code === 'Space' && document.activeElement !== nameInput) {
-    event.preventDefault();
-    spinWheel();
-  }
-});
+function init() {
+  bindEvents();
+  renderNameChips();
+  drawWheel();
+  renderCurrentDate();
+  startBugRain();
+  scheduleInterval('dateRefresh', renderCurrentDate, CONFIG.timing.dateRefreshMs);
+}
 
-renderNameChips();
-drawWheel();
-renderCurrentDate();
-setInterval(renderCurrentDate, 60000);
+init();

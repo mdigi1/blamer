@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Blamer wheel app for playful random picks, winner celebrations, and falling bug errors." />
   <title>Blamer</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
@@ -12,11 +13,11 @@
   <main class="app">
     <section class="panel">
       <p id="currentDate" class="current-date"></p>
-      <h1>Wheel of Fortune</h1>
+      <h1>Wheel of Blaming</h1>
       <p class="subtitle">Add names, press <strong>Spin</strong>, and the wheel picks one winner.</p>
 
       <div class="controls">
-        <input id="nameInput" type="text" placeholder="Type a name" maxlength="24" />
+        <input id="nameInput" type="text" placeholder="Type a name" maxlength="24" aria-label="Participant name" />
         <button id="addBtn" type="button">Add</button>
       </div>
 
@@ -28,7 +29,7 @@
 
     <section id="wheelWrap" class="wheel-wrap">
       <div class="pointer" aria-hidden="true"></div>
-      <canvas id="wheel" width="520" height="520"></canvas>
+      <canvas id="wheel" width="520" height="520" aria-label="Fortune wheel"></canvas>
       <p id="spinPhrase" class="spin-phrase" aria-live="polite"></p>
     </section>
   </main>

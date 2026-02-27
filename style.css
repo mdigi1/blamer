@@ -10,6 +10,15 @@
   --accent-2: #f5515f;
   --accent-3: #5ac8ff;
   --ok: #4ae2a6;
+  --wheel-size: min(84vw, 560px);
+  --wheel-size-mobile: min(88vw, 560px);
+  --spin-phrase-width: min(82vw, 520px);
+  --spin-phrase-width-mobile: min(86vw, 520px);
+  --screen-shake-duration: 2200ms;
+  --winner-blast-duration: 4200ms;
+  --spin-gold-glow-duration: 1000ms;
+  --spin-phrase-swap-duration: 760ms;
+  --bug-pop-burst-duration: 560ms;
 }
 
 * {
@@ -32,6 +41,17 @@ body {
     radial-gradient(circle at 80% 82%, rgba(245, 81, 95, 0.2) 0%, transparent 32%),
     linear-gradient(145deg, var(--bg-deep), var(--bg-mid));
   position: relative;
+}
+
+body.screen-shake {
+  animation: screenShake var(--screen-shake-duration) linear;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+html.screen-shake,
+body.screen-shake {
+  overflow: hidden;
 }
 
 body::before,
@@ -320,21 +340,23 @@ button {
   place-items: center;
   position: relative;
   align-content: start;
+  padding-bottom: 6.2rem;
   animation: riseIn 780ms ease;
 }
 
 #wheel {
-  width: min(82vw, 520px);
-  height: min(82vw, 520px);
-  max-width: 520px;
-  max-height: 520px;
+  width: var(--wheel-size);
+  height: var(--wheel-size);
+  max-width: 560px;
+  max-height: 560px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 8px solid rgba(229, 243, 255, 0.9);
+  background: radial-gradient(circle at 30% 25%, #ffffff 0%, #f7fbff 68%, #edf4ff 100%);
+  border: 10px solid #060b14;
   box-shadow:
     0 20px 36px rgba(2, 9, 20, 0.45),
-    0 0 0 12px rgba(92, 141, 204, 0.2),
-    0 0 30px rgba(90, 200, 255, 0.2);
+    0 0 0 2px rgba(148, 191, 255, 0.22),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45),
+    0 0 24px rgba(90, 200, 255, 0.22);
   cursor: pointer;
   transition: filter 180ms ease, transform 180ms ease;
 }
@@ -372,7 +394,8 @@ button {
 }
 
 .wheel-wrap.is-spinning #wheel {
-  filter: saturate(1.13);
+  filter: saturate(1.13) brightness(1.04);
+  animation: spinGoldGlow var(--spin-gold-glow-duration) ease-in-out infinite;
 }
 
 .wheel-wrap.is-spinning .pointer {
@@ -437,15 +460,15 @@ button {
 }
 
 .winner-blast.show {
-  animation: winnerBlastBackdrop 2200ms ease forwards;
+  animation: winnerBlastBackdrop var(--winner-blast-duration) ease forwards;
 }
 
 .winner-blast.show::before {
-  animation: winnerBlastDim 2200ms ease forwards;
+  animation: winnerBlastDim var(--winner-blast-duration) ease forwards;
 }
 
 .winner-blast.show .winner-blast-content {
-  animation: winnerBlastFly 2200ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: winnerBlastFly var(--winner-blast-duration) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .winner-blast.show .winner-blast-name {
@@ -469,10 +492,78 @@ button {
   animation: confettiDrop 1200ms ease-out forwards;
 }
 
+.bug-drop {
+  --bug-hit-x: 10px;
+  --bug-hit-y: 8px;
+  --bug-hit-x-neg: -10px;
+  --bug-hit-y-neg: -8px;
+  position: fixed;
+  display: block;
+  left: 0;
+  top: 0;
+  margin: var(--bug-hit-y-neg) var(--bug-hit-x-neg);
+  padding: var(--bug-hit-y) var(--bug-hit-x);
+  z-index: 13;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transform: translateY(-42px) rotate(0deg);
+  animation: bugDropFall var(--bug-fall-duration, 2400ms) linear forwards;
+}
+
+.bug-drop--icon {
+  width: 44px;
+  height: auto;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+}
+
+.bug-pop-burst {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  z-index: 14;
+  border-radius: 999px;
+  border: 3px solid var(--burst-color, #ffd166);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.55),
+    0 0 20px var(--burst-color, #ffd166);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.25);
+  opacity: 0.95;
+  animation: bugPopBurst var(--bug-pop-burst-duration) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.bug-pop-shard {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 11px;
+  z-index: 14;
+  border-radius: 3px;
+  background: var(--burst-color, #ffd166);
+  box-shadow: 0 0 10px var(--burst-color, #ffd166);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+  opacity: 0.95;
+  animation: bugPopShard var(--bug-pop-burst-duration) ease-out forwards;
+}
+
 .spin-phrase {
-  margin: 1rem 0 0;
-  min-height: 3rem;
-  max-width: min(82vw, 520px);
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  width: var(--spin-phrase-width);
   padding: 0.5rem 0.9rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 234, 183, 0.6);
@@ -485,6 +576,7 @@ button {
   letter-spacing: 0.015em;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
   opacity: 0;
+  z-index: 2;
   transform: translateY(4px);
   transition: opacity 420ms ease, transform 420ms ease;
 }
@@ -495,7 +587,7 @@ button {
 }
 
 .spin-phrase.swap {
-  animation: spinPhraseSwap 760ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: spinPhraseSwap var(--spin-phrase-swap-duration) cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @keyframes riseIn {
@@ -507,6 +599,72 @@ button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes screenShake {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  4% {
+    transform: translate3d(-4px, 3px, 0) rotate(-0.3deg);
+  }
+
+  8% {
+    transform: translate3d(6px, -5px, 0) rotate(0.35deg);
+  }
+
+  12% {
+    transform: translate3d(-7px, 6px, 0) rotate(-0.4deg);
+  }
+
+  16% {
+    transform: translate3d(9px, -7px, 0) rotate(0.45deg);
+  }
+
+  20% {
+    transform: translate3d(-10px, 8px, 0) rotate(-0.45deg);
+  }
+
+  24% {
+    transform: translate3d(8px, -6px, 0) rotate(0.4deg);
+  }
+
+  28% {
+    transform: translate3d(-7px, 5px, 0) rotate(-0.35deg);
+  }
+
+  34% {
+    transform: translate3d(6px, -4px, 0) rotate(0.3deg);
+  }
+
+  40% {
+    transform: translate3d(-5px, 4px, 0) rotate(-0.25deg);
+  }
+
+  48% {
+    transform: translate3d(4px, -3px, 0) rotate(0.2deg);
+  }
+
+  58% {
+    transform: translate3d(-3px, 2px, 0) rotate(-0.15deg);
+  }
+
+  70% {
+    transform: translate3d(2px, -2px, 0) rotate(0.1deg);
+  }
+
+  82% {
+    transform: translate3d(-1px, 1px, 0) rotate(-0.06deg);
+  }
+
+  92% {
+    transform: translate3d(1px, 0, 0) rotate(0.03deg);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
 }
 
@@ -601,6 +759,31 @@ button {
   }
 }
 
+@keyframes spinGoldGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 20px 36px rgba(2, 9, 20, 0.45),
+      0 0 0 2px rgba(148, 191, 255, 0.22),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.45),
+      0 0 24px rgba(90, 200, 255, 0.22),
+      0 0 26px rgba(255, 205, 92, 0.5),
+      0 0 52px rgba(255, 153, 34, 0.34),
+      0 0 74px rgba(255, 214, 122, 0.2);
+  }
+
+  50% {
+    box-shadow:
+      0 20px 36px rgba(2, 9, 20, 0.45),
+      0 0 0 2px rgba(148, 191, 255, 0.22),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.45),
+      0 0 24px rgba(90, 200, 255, 0.22),
+      0 0 34px rgba(255, 220, 128, 0.72),
+      0 0 68px rgba(255, 166, 38, 0.48),
+      0 0 96px rgba(255, 214, 122, 0.3);
+  }
+}
+
 @keyframes winnerBlastBackdrop {
   0% {
     opacity: 0;
@@ -682,6 +865,46 @@ button {
   }
 }
 
+@keyframes bugDropFall {
+  0% {
+    transform: translate(0, -42px) rotate(0deg);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 0.95;
+  }
+
+  100% {
+    transform: translate(var(--bug-drift-x, 0), 112vh) rotate(var(--bug-rot-end, 0deg));
+    opacity: 0.1;
+  }
+}
+
+@keyframes bugPopBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.25);
+    opacity: 0.95;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes bugPopShard {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+    opacity: 0.95;
+  }
+
+  100% {
+    transform: translate(calc(-50% + var(--sx, 0px)), calc(-50% + var(--sy, 0px))) scale(0.2) rotate(var(--srot, 0deg));
+    opacity: 0;
+  }
+}
+
 @keyframes spinPhraseSwap {
   0% {
     transform: translateY(0) scale(1);
@@ -738,7 +961,11 @@ button {
   }
 
   #wheel {
-    width: min(86vw, 520px);
-    height: min(86vw, 520px);
+    width: var(--wheel-size-mobile);
+    height: var(--wheel-size-mobile);
+  }
+
+  .spin-phrase {
+    width: var(--spin-phrase-width-mobile);
   }
 }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Bug icon">
+  <defs>
+    <linearGradient id="bugBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff8f2f" />
+      <stop offset="100%" stop-color="#ef476f" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="37" rx="14" ry="17" fill="url(#bugBody)" />
+  <circle cx="32" cy="20" r="9" fill="#1a2438" />
+  <circle cx="29" cy="19" r="1.8" fill="#fff" />
+  <circle cx="35" cy="19" r="1.8" fill="#fff" />
+  <path d="M22 37h20M20 43h24M22 49h20" stroke="#fff2d6" stroke-width="2.6" stroke-linecap="round" />
+  <path d="M23 33l-9-6M22 41l-11 1M23 49l-9 6M41 33l9-6M42 41l11 1M41 49l9 6" stroke="#25314a" stroke-width="3" stroke-linecap="round" />
+  <path d="M28 12l-5-6M36 12l5-6" stroke="#25314a" stroke-width="3" stroke-linecap="round" />
+</svg>
