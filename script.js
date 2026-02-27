@@ -258,12 +258,18 @@ function scheduleInterval(timerKey, callback, interval) {
   state.timers[timerKey] = setInterval(callback, interval);
 }
 
-function removeLater(node, delay) {
+function removeOnAnimationEnd(node, animationName = '') {
   if (!node) {
     return;
   }
 
-  setTimeout(() => node.remove(), delay);
+  node.addEventListener('animationend', (event) => {
+    if (animationName && event.animationName !== animationName) {
+      return;
+    }
+
+    node.remove();
+  }, { once: true });
 }
 
 function setSpinningState(spinning) {
@@ -473,14 +479,9 @@ function emitBugDrop() {
   const delay = randomRange(0, 220);
   drop.style.setProperty('--bug-fall-duration', `${duration}ms`);
   drop.style.animationDelay = `${delay}ms`;
-  drop.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    popBugDrop(drop);
-  });
+  removeOnAnimationEnd(drop, 'bugDropFall');
 
   dom.fxLayer.appendChild(drop);
-  removeLater(drop, duration + delay + 180);
 }
 
 function popBugDrop(drop) {
@@ -530,7 +531,7 @@ function spawnBugPopBurst(x, y, color) {
   burst.style.top = `${y}px`;
   burst.style.setProperty('--burst-color', color);
   dom.fxLayer.appendChild(burst);
-  removeLater(burst, CONFIG.timing.bugPopBurstMs);
+  removeOnAnimationEnd(burst, 'bugPopBurst');
 
   for (let i = 0; i < 7; i += 1) {
     const shard = document.createElement('span');
@@ -543,8 +544,28 @@ function spawnBugPopBurst(x, y, color) {
     shard.style.setProperty('--srot', `${randomRange(-130, 130)}deg`);
     shard.style.animationDelay = `${randomRange(0, 80)}ms`;
     dom.fxLayer.appendChild(shard);
-    removeLater(shard, CONFIG.timing.bugPopBurstMs + 120);
+    removeOnAnimationEnd(shard, 'bugPopShard');
   }
+}
+
+function handleFxLayerClick(event) {
+  if (!dom.fxLayer) {
+    return;
+  }
+
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const drop = target.closest('.bug-drop');
+  if (!drop || !dom.fxLayer.contains(drop)) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  popBugDrop(drop);
 }
 
 function startBugRain() {
@@ -753,6 +774,7 @@ function bindEvents() {
   dom.addBtn?.addEventListener('click', addName);
   dom.spinBtn?.addEventListener('click', spinWheel);
   dom.canvas?.addEventListener('click', spinWheel);
+  dom.fxLayer?.addEventListener('click', handleFxLayerClick);
 
   dom.nameInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
