@@ -7,6 +7,7 @@ A lightweight, no-build web app that picks a random winner from a list using a s
 - Lets you add and remove participant names.
 - Renders a colorful wheel on `<canvas>` with one segment per name.
 - Spins with easing animation and selects a random winner.
+- Shows humorous dev phrases under the wheel while it is spinning.
 - Highlights the winner in the list and result area.
 - Shows celebration effects (confetti + fullscreen winner overlay).
 - Displays the current date and refreshes it every minute.
@@ -57,6 +58,8 @@ Edit `script.js` to tune behavior:
 - Wheel palette: `const sliceColors = [...]`
 - Spin duration: `const duration = 7000` (milliseconds)
 - Confetti amount: loop count in `showWinnerBurst()`
+- Spin phrases: `const spinPhrases = [...]`
+- Phrase timing: `spinPhraseIntervalMs` and `spinPhraseSwapPointMs`
 
 ## Current Notes
 

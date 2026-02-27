@@ -6,6 +6,7 @@ const namesListEl = document.getElementById('namesList');
 const currentDateEl = document.getElementById('currentDate');
 const wheelWrap = document.getElementById('wheelWrap');
 const fxLayer = document.getElementById('fxLayer');
+const spinPhraseEl = document.getElementById('spinPhrase');
 const winnerBlastEl = document.getElementById('winnerBlast');
 const winnerBlastNameEl = document.getElementById('winnerBlastName');
 
@@ -18,12 +19,68 @@ const sliceColors = [
   '#f95d6a', '#ff9f1c', '#ffd166', '#06d6a0',
   '#00a8e8', '#4361ee', '#9d4edd', '#ef476f'
 ];
+const spinPhraseIntervalMs = 2200;
+const spinPhraseSwapPointMs = 360;
+
+const spinPhrases = [
+  'Who broke prod this time?',
+  'Works on my machine, ship it.',
+  'No plan, full deploy, zero fear.',
+  'CI failed because it is weak.',
+  'Who pushed to main on Friday night?',
+  'Not a bug, just your onboarding.',
+  'Did not read logs, still 200% confident.',
+  'Rollback is for cowards, hit deploy.',
+  'No tests, no problems.',
+  'Prod is burning, but KPIs look great.',
+  'One more force-push and we are legends.',
+  'Docker is crying quietly in the corner.',
+  'PR approved in 12 seconds, respect.',
+  'No monitoring, just pure intuition.',
+  'We debug in production like adults.',
+  'Ship fast, explain later.',
+  'If it compiles, it is architecture.',
+  'Another migration on Friday? Easy.',
+  'Canary deploy? Nah, full send.',
+  'Who needs docs when we have vibes?',
+  'The root cause is someone else.',
+  'We skipped staging to save time.',
+  'Alert fatigue is just background music.',
+  'The incident is now a feature request.',
+  'We renamed tech debt to roadmap.',
+  'No blame, only aggressive ownership.',
+  'The fix is one line and 400 comments.',
+  'Postmortem says: confidence was high.',
+  'SLA is a mindset, not a number.',
+  'npm install solved nothing, as expected.',
+  'Cache invalidation won again.',
+  'We shipped a TODO to production.',
+  'The API changed, nobody told frontend.',
+  'The schema migrated itself, probably.',
+  'We scaled horizontally into chaos.',
+  'This regex is now a critical dependency.',
+  'Another webhook, another mystery.',
+  'Auth broke because clocks disagree.',
+  'The queue is fine, just very emotional.',
+  'Hot reload worked, reality did not.',
+  'Yesterday stable, today distributed.',
+  'The patch is tiny, the blast radius is not.',
+  'Kubernetes said no, with confidence.',
+  'One missing semicolon, full business outage.',
+  'The dashboard is green, users are not.',
+  'DNS propagated directly into panic mode.',
+  'Feature flag off means on in one region.',
+  'It passed QA and failed physics.',
+  'Same bug, different microservice.'
+];
 
 let names = ['Evgeniy P', 'Hlib', 'Ihor', 'Iryn', 'Ivan (singer)', 'Ivan', 'Max', 'Niv', 'Oleg', 'Roma', 'Ross', 'Ruslan', 'Serhii (greatest)', 'Serhii', 'Vitalii', 'Yaroslav', 'Yevhenii H', 'Jonathan'];
 let rotation = 0;
 let isSpinning = false;
 let lastWinnerIndex = null;
 let winnerBlastTimer = null;
+let spinPhraseInterval = null;
+let spinPhraseHideTimer = null;
 
 function renderCurrentDate() {
   if (!currentDateEl) {
@@ -76,6 +133,88 @@ function showWinnerFullscreen(name) {
   winnerBlastTimer = setTimeout(() => {
     winnerBlastEl.classList.remove('show');
   }, 2200);
+}
+
+function pickSpinPhrase(previous = '') {
+  if (spinPhrases.length <= 1) {
+    return spinPhrases[0] || '';
+  }
+
+  let next = previous;
+  for (let i = 0; i < 5 && next === previous; i += 1) {
+    next = spinPhrases[Math.floor(Math.random() * spinPhrases.length)];
+  }
+  return next;
+}
+
+function renderSpinPhrase() {
+  if (!spinPhraseEl) {
+    return;
+  }
+
+  if (spinPhraseHideTimer) {
+    clearTimeout(spinPhraseHideTimer);
+    spinPhraseHideTimer = null;
+  }
+
+  spinPhraseEl.textContent = pickSpinPhrase(spinPhraseEl.textContent);
+  spinPhraseEl.classList.remove('swap');
+  spinPhraseEl.classList.add('show');
+}
+
+function animateSpinPhraseSwap() {
+  if (!spinPhraseEl) {
+    return;
+  }
+
+  const nextPhrase = pickSpinPhrase(spinPhraseEl.textContent);
+  spinPhraseEl.classList.remove('swap');
+  void spinPhraseEl.offsetWidth;
+  spinPhraseEl.classList.add('swap');
+
+  setTimeout(() => {
+    if (!spinPhraseEl || !isSpinning) {
+      return;
+    }
+    spinPhraseEl.textContent = nextPhrase;
+  }, spinPhraseSwapPointMs);
+}
+
+function startSpinPhrases() {
+  if (spinPhraseInterval) {
+    clearInterval(spinPhraseInterval);
+  }
+  if (spinPhraseHideTimer) {
+    clearTimeout(spinPhraseHideTimer);
+    spinPhraseHideTimer = null;
+  }
+
+  renderSpinPhrase();
+  spinPhraseInterval = setInterval(animateSpinPhraseSwap, spinPhraseIntervalMs);
+}
+
+function stopSpinPhrases() {
+  if (spinPhraseInterval) {
+    clearInterval(spinPhraseInterval);
+    spinPhraseInterval = null;
+  }
+  if (!spinPhraseEl) {
+    return;
+  }
+
+  spinPhraseEl.classList.remove('swap');
+  if (spinPhraseHideTimer) {
+    clearTimeout(spinPhraseHideTimer);
+  }
+  spinPhraseHideTimer = setTimeout(() => {
+    if (!spinPhraseEl) {
+      return;
+    }
+
+    spinPhraseEl.classList.remove('show');
+    spinPhraseEl.textContent = '';
+    spinPhraseHideTimer = null;
+  }, 700);
 }
 
 function renderNameChips() {
@@ -208,6 +347,7 @@ function spinWheel() {
   wheelWrap.classList.add('is-spinning');
   resultEl.classList.remove('win');
   resultEl.textContent = 'Spinning...';
+  startSpinPhrases();
 
   const n = names.length;
   const segment = (Math.PI * 2) / n;
@@ -242,6 +382,7 @@ function spinWheel() {
     }
 
     isSpinning = false;
+    stopSpinPhrases();
     spinBtn.disabled = false;
     wheelWrap.classList.remove('is-spinning');
     wheelWrap.classList.add('celebrate');
