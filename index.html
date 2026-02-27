@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wheel of Fortune</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="brand">Blamer <span class="brand-version">v1.0</span></header>
+  <main class="app">
+    <section class="panel">
+      <p id="currentDate" class="current-date"></p>
+      <h1>Wheel of Fortune</h1>
+      <p class="subtitle">Add names, press <strong>Spin</strong>, and the wheel picks one winner.</p>
+
+      <div class="controls">
+        <input id="nameInput" type="text" placeholder="Type a name" maxlength="24" />
+        <button id="addBtn" type="button">Add</button>
+      </div>
+
+      <div id="namesList" class="names-list"></div>
+
+      <button id="spinBtn" class="spin-btn" type="button">Spin</button>
+      <p id="result" class="result">Winner for today: —</p>
+    </section>
+
+    <section id="wheelWrap" class="wheel-wrap">
+      <div class="pointer" aria-hidden="true"></div>
+      <canvas id="wheel" width="520" height="520"></canvas>
+    </section>
+  </main>
+
+  <div id="winnerBlast" class="winner-blast" aria-hidden="true">
+    <div class="winner-blast-content">
+      <span class="winner-blast-label">Winner for today</span>
+      <span id="winnerBlastName" class="winner-blast-name">Max</span>
+    </div>
+  </div>
+  <div id="fxLayer" class="fx-layer" aria-hidden="true"></div>
+  <script src="script.js"></script>
+</body>
+</html>
