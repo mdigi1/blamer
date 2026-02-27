@@ -6,7 +6,7 @@ const namesListEl = document.getElementById('namesList');
 const currentDateEl = document.getElementById('currentDate');
 const wheelWrap = document.getElementById('wheelWrap');
 const fxLayer = document.getElementById('fxLayer');
-const spinPhraseEl = document.getElementById('spinPhrase');
+let spinPhraseEl = document.getElementById('spinPhrase');
 const winnerBlastEl = document.getElementById('winnerBlast');
 const winnerBlastNameEl = document.getElementById('winnerBlastName');
 
@@ -135,6 +135,23 @@ function showWinnerFullscreen(name) {
   }, 2200);
 }
 
+function ensureSpinPhraseElement() {
+  if (spinPhraseEl) {
+    return spinPhraseEl;
+  }
+  if (!wheelWrap) {
+    return null;
+  }
+
+  const created = document.createElement('p');
+  created.id = 'spinPhrase';
+  created.className = 'spin-phrase';
+  created.setAttribute('aria-live', 'polite');
+  wheelWrap.appendChild(created);
+  spinPhraseEl = created;
+  return spinPhraseEl;
+}
+
 function pickSpinPhrase(previous = '') {
   if (spinPhrases.length <= 1) {
     return spinPhrases[0] || '';
@@ -148,7 +165,8 @@ function pickSpinPhrase(previous = '') {
 }
 
 function renderSpinPhrase() {
-  if (!spinPhraseEl) {
+  const phraseEl = ensureSpinPhraseElement();
+  if (!phraseEl) {
     return;
   }
 
@@ -157,26 +175,27 @@ function renderSpinPhrase() {
     spinPhraseHideTimer = null;
   }
 
-  spinPhraseEl.textContent = pickSpinPhrase(spinPhraseEl.textContent);
-  spinPhraseEl.classList.remove('swap');
-  spinPhraseEl.classList.add('show');
+  phraseEl.textContent = pickSpinPhrase(phraseEl.textContent);
+  phraseEl.classList.remove('swap');
+  phraseEl.classList.add('show');
 }
 
 function animateSpinPhraseSwap() {
-  if (!spinPhraseEl) {
+  const phraseEl = ensureSpinPhraseElement();
+  if (!phraseEl) {
     return;
   }
 
-  const nextPhrase = pickSpinPhrase(spinPhraseEl.textContent);
-  spinPhraseEl.classList.remove('swap');
-  void spinPhraseEl.offsetWidth;
-  spinPhraseEl.classList.add('swap');
+  const nextPhrase = pickSpinPhrase(phraseEl.textContent);
+  phraseEl.classList.remove('swap');
+  void phraseEl.offsetWidth;
+  phraseEl.classList.add('swap');
 
   setTimeout(() => {
-    if (!spinPhraseEl || !isSpinning) {
+    if (!phraseEl || !isSpinning) {
       return;
     }
-    spinPhraseEl.textContent = nextPhrase;
+    phraseEl.textContent = nextPhrase;
   }, spinPhraseSwapPointMs);
 }
 
@@ -198,21 +217,22 @@ function stopSpinPhrases() {
     clearInterval(spinPhraseInterval);
     spinPhraseInterval = null;
   }
-  if (!spinPhraseEl) {
+  const phraseEl = ensureSpinPhraseElement();
+  if (!phraseEl) {
     return;
   }
 
-  spinPhraseEl.classList.remove('swap');
+  phraseEl.classList.remove('swap');
   if (spinPhraseHideTimer) {
     clearTimeout(spinPhraseHideTimer);
   }
   spinPhraseHideTimer = setTimeout(() => {
-    if (!spinPhraseEl) {
+    if (!phraseEl) {
       return;
     }
 
-    spinPhraseEl.classList.remove('show');
-    spinPhraseEl.textContent = '';
+    phraseEl.classList.remove('show');
+    phraseEl.textContent = '';
     spinPhraseHideTimer = null;
   }, 700);
 }
