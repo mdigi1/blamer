@@ -8,8 +8,8 @@ const dom = {
   wheelWrap: document.getElementById('wheelWrap'),
   fxLayer: document.getElementById('fxLayer'),
   spinPhraseEl: document.getElementById('spinPhrase'),
-  winnerBlastEl: document.getElementById('winnerBlast'),
-  winnerBlastNameEl: document.getElementById('winnerBlastName'),
+  targetBlastEl: document.getElementById('targetBlast'),
+  targetBlastNameEl: document.getElementById('targetBlastName'),
   canvas: document.getElementById('wheel')
 };
 
@@ -22,7 +22,7 @@ const CONFIG = {
     centerRadius: 32
   },
   timing: {
-    winnerBlastMs: 4200,
+    targetBlastMs: 4200,
     spinPhraseIntervalMs: 2200,
     spinPhraseSwapPointMs: 360,
     spinPhraseHideDelayMs: 700,
@@ -126,8 +126,8 @@ const SLICE_COLORS = [
 ];
 
 const UI_TEXT = {
-  winnerPrefix: 'Winner for today: ',
-  winnerEmpty: 'Winner for today: —',
+  targetPrefix: 'Target for today: ',
+  targetEmpty: 'Target for today: —',
   listEmpty: 'List is empty',
   spinning: 'Spinning...',
   noNames: 'No names'
@@ -208,9 +208,10 @@ const state = {
   ],
   rotation: 0,
   isSpinning: false,
-  lastWinnerIndex: null,
+  lastTargetIndex: null,
+  bugRainWarmupTimeouts: [],
   timers: {
-    winnerBlast: null,
+    targetBlast: null,
     spinPhraseInterval: null,
     spinPhraseSwap: null,
     spinPhraseHide: null,
@@ -256,6 +257,15 @@ function scheduleTimeout(timerKey, callback, delay) {
 function scheduleInterval(timerKey, callback, interval) {
   clearTimer(timerKey, clearInterval);
   state.timers[timerKey] = setInterval(callback, interval);
+}
+
+function clearBugRainWarmups() {
+  if (!state.bugRainWarmupTimeouts.length) {
+    return;
+  }
+
+  state.bugRainWarmupTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+  state.bugRainWarmupTimeouts = [];
 }
 
 function removeOnAnimationEnd(node, animationName = '') {
@@ -304,37 +314,37 @@ function resetResult() {
     return;
   }
 
-  dom.resultEl.textContent = UI_TEXT.winnerEmpty;
+  dom.resultEl.textContent = UI_TEXT.targetEmpty;
   dom.resultEl.classList.remove('win');
 }
 
-function showWinnerResult(name) {
+function showTargetResult(name) {
   if (!dom.resultEl) {
     return;
   }
 
   dom.resultEl.textContent = '';
-  dom.resultEl.append(document.createTextNode(UI_TEXT.winnerPrefix));
+  dom.resultEl.append(document.createTextNode(UI_TEXT.targetPrefix));
 
-  const winnerName = document.createElement('span');
-  winnerName.className = 'winner-name';
-  winnerName.textContent = name;
-  dom.resultEl.append(winnerName);
+  const targetName = document.createElement('span');
+  targetName.className = 'target-name';
+  targetName.textContent = name;
+  dom.resultEl.append(targetName);
 }
 
-function showWinnerFullscreen(name) {
-  if (!dom.winnerBlastEl || !dom.winnerBlastNameEl) {
+function showTargetFullscreen(name) {
+  if (!dom.targetBlastEl || !dom.targetBlastNameEl) {
     return;
   }
 
-  dom.winnerBlastNameEl.textContent = name;
-  dom.winnerBlastEl.classList.remove('show');
-  void dom.winnerBlastEl.offsetWidth;
-  dom.winnerBlastEl.classList.add('show');
+  dom.targetBlastNameEl.textContent = name;
+  dom.targetBlastEl.classList.remove('show');
+  void dom.targetBlastEl.offsetWidth;
+  dom.targetBlastEl.classList.add('show');
 
-  scheduleTimeout('winnerBlast', () => {
-    dom.winnerBlastEl?.classList.remove('show');
-  }, CONFIG.timing.winnerBlastMs);
+  scheduleTimeout('targetBlast', () => {
+    dom.targetBlastEl?.classList.remove('show');
+  }, CONFIG.timing.targetBlastMs);
 }
 
 function triggerScreenShake() {
@@ -443,7 +453,7 @@ function stopSpinPhrases() {
 }
 
 function emitBugDrop() {
-  if (!dom.fxLayer) {
+  if (!dom.fxLayer || document.hidden) {
     return;
   }
 
@@ -574,9 +584,14 @@ function startBugRain() {
   }
 
   clearTimer('bugRainInterval', clearInterval);
+  clearBugRainWarmups();
 
   for (let i = 0; i < CONFIG.bugRain.warmupCount; i += 1) {
-    setTimeout(emitBugDrop, randomRange(0, 260));
+    const timeoutId = setTimeout(() => {
+      state.bugRainWarmupTimeouts = state.bugRainWarmupTimeouts.filter((id) => id !== timeoutId);
+      emitBugDrop();
+    }, randomRange(0, 260));
+    state.bugRainWarmupTimeouts.push(timeoutId);
   }
 
   scheduleInterval('bugRainInterval', () => {
@@ -584,6 +599,21 @@ function startBugRain() {
       emitBugDrop();
     }
   }, CONFIG.timing.bugRainIntervalMs);
+}
+
+function stopBugRain() {
+  clearTimer('bugRainInterval', clearInterval);
+  clearBugRainWarmups();
+  dom.fxLayer?.querySelectorAll('.bug-drop').forEach((drop) => drop.remove());
+}
+
+function handleVisibilityChange() {
+  if (document.hidden) {
+    stopBugRain();
+    return;
+  }
+
+  startBugRain();
 }
 
 function renderNameChips() {
@@ -604,8 +634,8 @@ function renderNameChips() {
   state.names.forEach((name, index) => {
     const chip = document.createElement('span');
     chip.className = 'name-chip';
-    if (index === state.lastWinnerIndex) {
-      chip.classList.add('winner-chip');
+    if (index === state.lastTargetIndex) {
+      chip.classList.add('target-chip');
     }
     chip.textContent = name;
 
@@ -681,7 +711,7 @@ function drawWheel() {
 }
 
 function syncAfterNamesChange() {
-  state.lastWinnerIndex = null;
+  state.lastTargetIndex = null;
   resetResult();
   renderNameChips();
   drawWheel();
@@ -728,10 +758,10 @@ function spinWheel() {
   startSpinPhrases();
 
   const segment = CONFIG.geometry.fullCircle / state.names.length;
-  const winnerIndex = randomInt(state.names.length);
+  const targetIndex = randomInt(state.names.length);
 
-  const winnerCenterAtZero = winnerIndex * segment + segment / 2;
-  const baseTarget = CONFIG.geometry.pointerAngle - winnerCenterAtZero;
+  const targetCenterAtZero = targetIndex * segment + segment / 2;
+  const baseTarget = CONFIG.geometry.pointerAngle - targetCenterAtZero;
   const spins = CONFIG.spin.minSpins + randomInt(CONFIG.spin.extraSpinVariants);
   const targetRotation = baseTarget + spins * CONFIG.geometry.fullCircle;
 
@@ -755,11 +785,11 @@ function spinWheel() {
     stopSpinPhrases();
 
     dom.wheelWrap?.classList.add('celebrate');
-    state.lastWinnerIndex = winnerIndex;
+    state.lastTargetIndex = targetIndex;
     renderNameChips();
-    showWinnerResult(state.names[winnerIndex]);
+    showTargetResult(state.names[targetIndex]);
     dom.resultEl?.classList.add('win');
-    showWinnerFullscreen(state.names[winnerIndex]);
+    showTargetFullscreen(state.names[targetIndex]);
     triggerScreenShake();
 
     setTimeout(() => {
@@ -775,6 +805,7 @@ function bindEvents() {
   dom.spinBtn?.addEventListener('click', spinWheel);
   dom.canvas?.addEventListener('click', spinWheel);
   dom.fxLayer?.addEventListener('click', handleFxLayerClick);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
   dom.nameInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {

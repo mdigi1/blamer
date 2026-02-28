@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Blamer wheel app for playful random picks, winner celebrations, and falling bug errors." />
+  <meta name="description" content="Blamer wheel app for playful random picks, target celebrations, and falling bug errors." />
   <title>Blamer</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
@@ -14,7 +14,7 @@
     <section class="panel">
       <p id="currentDate" class="current-date"></p>
       <h1>Wheel of Blaming</h1>
-      <p class="subtitle">Add names, press <strong>Spin</strong>, and the wheel picks one winner.</p>
+      <p class="subtitle">Add names, press <strong>Spin</strong>, and the wheel picks one target.</p>
 
       <div class="controls">
         <input id="nameInput" type="text" placeholder="Type a name" maxlength="24" aria-label="Participant name" />
@@ -24,7 +24,7 @@
       <div id="namesList" class="names-list"></div>
 
       <button id="spinBtn" class="spin-btn" type="button">Spin</button>
-      <p id="result" class="result">Winner for today: —</p>
+      <p id="result" class="result">Target for today: —</p>
     </section>
 
     <section id="wheelWrap" class="wheel-wrap">
@@ -34,10 +34,10 @@
     </section>
   </main>
 
-  <div id="winnerBlast" class="winner-blast" aria-hidden="true">
-    <div class="winner-blast-content">
-      <span class="winner-blast-label">Winner for today</span>
-      <span id="winnerBlastName" class="winner-blast-name">Max</span>
+  <div id="targetBlast" class="target-blast" aria-hidden="true">
+    <div class="target-blast-content">
+      <span class="target-blast-label">Target for today</span>
+      <span id="targetBlastName" class="target-blast-name">Max</span>
     </div>
   </div>
   <div id="fxLayer" class="fx-layer" aria-hidden="true"></div>

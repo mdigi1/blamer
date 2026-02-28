@@ -1,15 +1,15 @@
 # Blamer
 
-A lightweight, no-build web app that picks a random winner from a list using a spinning wheel.
+A lightweight, no-build web app that picks a random target from a list using a spinning wheel.
 
 ## What It Does
 
 - Lets you add and remove participant names.
 - Renders a colorful wheel on `<canvas>` with one segment per name.
-- Spins with easing animation and selects a random winner.
+- Spins with easing animation and selects a random target.
 - Shows rotating dev phrases under the wheel while it is spinning.
-- Highlights the winner in the list and result area.
-- Shows celebration effects (confetti + fullscreen winner overlay).
+- Highlights the target in the list and result area.
+- Shows celebration effects (confetti + fullscreen target overlay).
 - Runs a continuous falling “bug rain” effect with common error messages and bug icons.
 - Displays the current date and refreshes it every minute.
 
@@ -43,7 +43,7 @@ Then open `http://localhost:8080`.
   - clicking `Spin`,
   - clicking the wheel,
   - pressing `Space` (when input is not focused).
-- Winner appears in the result row and fullscreen celebration overlay.
+- Target appears in the result row and fullscreen celebration overlay.
 
 ## Project Structure
 
@@ -60,7 +60,7 @@ Edit `script.js` to tune behavior:
 - Default names: `state.names = [...]`
 - Wheel palette: `SLICE_COLORS`
 - Spin timing: `CONFIG.timing.spinDurationMs`
-- Winner fullscreen duration: `CONFIG.timing.winnerBlastMs`
+- Target fullscreen duration: `CONFIG.timing.targetBlastMs`
 - Confetti intensity: `CONFIG.confetti.count`
 - Spin phrases: `SPIN_PHRASES`
 - Bug rain speed/intensity: `CONFIG.timing.bugRainIntervalMs`, `CONFIG.bugRain.dropsPerTick`

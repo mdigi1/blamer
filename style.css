@@ -15,7 +15,7 @@
   --spin-phrase-width: min(82vw, 520px);
   --spin-phrase-width-mobile: min(86vw, 520px);
   --screen-shake-duration: 2200ms;
-  --winner-blast-duration: 4200ms;
+  --target-blast-duration: 4200ms;
   --spin-gold-glow-duration: 1000ms;
   --spin-phrase-swap-duration: 760ms;
   --bug-pop-burst-duration: 560ms;
@@ -262,7 +262,7 @@ button {
   animation: chipIn 240ms ease;
 }
 
-.name-chip.winner-chip {
+.name-chip.target-chip {
   background: linear-gradient(165deg, rgba(94, 255, 186, 0.25), rgba(43, 175, 126, 0.2));
   border-color: rgba(94, 255, 186, 0.5);
   box-shadow: 0 4px 14px rgba(74, 226, 166, 0.25);
@@ -319,10 +319,10 @@ button {
 }
 
 .result.win {
-  animation: winnerPop 460ms ease, winnerGlow 1100ms ease-in-out 2;
+  animation: targetPop 460ms ease, targetGlow 1100ms ease-in-out 2;
 }
 
-.winner-name {
+.target-name {
   display: inline-block;
   padding: 0 0.14rem;
   font-size: 1.16em;
@@ -332,7 +332,7 @@ button {
   background-clip: text;
   color: transparent;
   text-shadow: 0 3px 12px rgba(74, 226, 166, 0.28);
-  animation: winnerNamePop 700ms ease;
+  animation: targetNamePop 700ms ease;
 }
 
 .wheel-wrap {
@@ -406,7 +406,7 @@ button {
   animation: wheelCelebrate 780ms ease;
 }
 
-.winner-blast {
+.target-blast {
   position: fixed;
   inset: 0;
   display: grid;
@@ -417,7 +417,7 @@ button {
   overflow: hidden;
 }
 
-.winner-blast::before {
+.target-blast::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -426,7 +426,7 @@ button {
   opacity: 0;
 }
 
-.winner-blast-content {
+.target-blast-content {
   position: relative;
   display: grid;
   justify-items: center;
@@ -435,7 +435,7 @@ button {
   opacity: 0;
 }
 
-.winner-blast-label {
+.target-blast-label {
   font-size: clamp(1rem, 2.2vw, 1.5rem);
   font-weight: 900;
   letter-spacing: 0.34em;
@@ -444,7 +444,7 @@ button {
   text-shadow: 0 4px 18px rgba(5, 18, 36, 0.6);
 }
 
-.winner-blast-name {
+.target-blast-name {
   font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
   font-size: clamp(3rem, 15vw, 10rem);
   font-weight: 900;
@@ -459,20 +459,20 @@ button {
   filter: drop-shadow(0 8px 20px rgba(255, 126, 52, 0.5));
 }
 
-.winner-blast.show {
-  animation: winnerBlastBackdrop var(--winner-blast-duration) ease forwards;
+.target-blast.show {
+  animation: targetBlastBackdrop var(--target-blast-duration) ease forwards;
 }
 
-.winner-blast.show::before {
-  animation: winnerBlastDim var(--winner-blast-duration) ease forwards;
+.target-blast.show::before {
+  animation: targetBlastDim var(--target-blast-duration) ease forwards;
 }
 
-.winner-blast.show .winner-blast-content {
-  animation: winnerBlastFly var(--winner-blast-duration) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+.target-blast.show .target-blast-content {
+  animation: targetBlastFly var(--target-blast-duration) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-.winner-blast.show .winner-blast-name {
-  animation: winnerBlastShine 1500ms ease-in-out 250ms both;
+.target-blast.show .target-blast-name {
+  animation: targetBlastShine 1500ms ease-in-out 250ms both;
 }
 
 .fx-layer {
@@ -691,7 +691,7 @@ button {
   }
 }
 
-@keyframes winnerPop {
+@keyframes targetPop {
   0% {
     transform: scale(0.97);
   }
@@ -705,7 +705,7 @@ button {
   }
 }
 
-@keyframes winnerGlow {
+@keyframes targetGlow {
   0%,
   100% {
     text-shadow: 0 0 0 rgba(74, 226, 166, 0);
@@ -716,7 +716,7 @@ button {
   }
 }
 
-@keyframes winnerNamePop {
+@keyframes targetNamePop {
   0% {
     transform: translateY(3px) scale(0.92) rotate(-4deg);
     opacity: 0.35;
@@ -784,7 +784,7 @@ button {
   }
 }
 
-@keyframes winnerBlastBackdrop {
+@keyframes targetBlastBackdrop {
   0% {
     opacity: 0;
   }
@@ -802,7 +802,7 @@ button {
   }
 }
 
-@keyframes winnerBlastDim {
+@keyframes targetBlastDim {
   0% {
     opacity: 0;
   }
@@ -820,7 +820,7 @@ button {
   }
 }
 
-@keyframes winnerBlastFly {
+@keyframes targetBlastFly {
   0% {
     transform: translateY(70px) scale(0.2) rotate(-12deg);
     opacity: 0;
@@ -842,7 +842,7 @@ button {
   }
 }
 
-@keyframes winnerBlastShine {
+@keyframes targetBlastShine {
   0%,
   100% {
     filter: drop-shadow(0 8px 20px rgba(255, 126, 52, 0.5));
