@@ -90,6 +90,7 @@ const CONFIG = {
       'ReferenceError: process is not defined',
       'Unexpected end of JSON input',
       'JSON.parse: bad parsing',
+      "Cannot read properties of null (reading 'session_id')",
       'Invalid hook call',
       'Hydration failed',
       'ChunkLoadError',
